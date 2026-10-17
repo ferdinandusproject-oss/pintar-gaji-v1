@@ -1,0 +1,9 @@
+{
+  "name": "pintar-gaji",
+  "version": "1.0.0",
+  "description": "PINTAR-Gaji — Dinas Kesehatan Kab. Minahasa Selatan. Migrasi dari Google Apps Script ke Vercel + Google Sheets API.",
+  "private": true,
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}

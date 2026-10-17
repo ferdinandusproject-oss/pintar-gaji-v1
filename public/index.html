@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PINTAR-Gaji</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Tombol Mode Malam/Terang — selalu terlihat (termasuk sebelum login) -->
+  <button class="theme-fab" onclick="toggleTheme()" title="Ganti Mode Malam/Terang"><i class="bi bi-moon-stars theme-toggle-icon"></i></button>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner-border" style="color:#0EA5E9" role="status"></div>
+    <p class="mt-3">Memuat PINTAR-Gaji...</p>
+  </div>
+
+  <!-- ══════════════ HALAMAN LOGIN ══════════════ -->
+  <div id="loginScreen" class="login-screen" style="display:none;">
+    <div class="login-card">
+      <div class="login-logo"><i class="bi bi-shield-check"></i></div>
+      <div class="login-instansi">DINAS KESEHATAN KAB. MINAHASA SELATAN</div>
+      <h2 class="login-title">PINTAR-Gaji</h2>
+      <p class="login-subtitle">Masuk dengan NIP (Pegawai) atau Username (Admin/Super Admin) Anda.</p>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="mb-3">
+          <label class="form-label">NIP / Username</label>
+          <input type="text" class="form-control" id="loginIdentifier" placeholder="Masukkan NIP atau Username" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <div class="position-relative">
+            <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
+            <button type="button" class="pw-toggle" onclick="togglePasswordVisibility()"><i class="bi bi-eye" id="pwEyeIcon"></i></button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-accent w-100" id="loginBtn">Masuk</button>
+      </form>
+      <div class="login-footer">Dinas Kesehatan Kabupaten Minahasa Selatan<br>Sistem Informasi Penggajian ASN</div>
+    </div>
+  </div>
+
+  <!-- ══════════════ APP SHELL (setelah login) ══════════════ -->
+  <div id="appShell" style="display:none;">
+
+    <!-- Sidebar Admin (Admin/SuperAdmin) -->
+    <nav id="sidebar" class="sidebar" style="display:none;">
+      <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="bi bi-shield-check"></i></div>
+        <div class="sidebar-brand-text">
+          <div class="sidebar-title">PINTAR-Gaji</div>
+          <div class="sidebar-subtitle" id="sidebarSubtitle">Panel Operator</div>
+        </div>
+      </div>
+      <div class="sidebar-nav-label">Menu</div>
+      <ul class="sidebar-nav" id="sidebarNav">
+        <li id="navAdminDashboard"><a href="javascript:void(0)" onclick="navigateTo('adminDashboard')" class="nav-link active" data-page="adminDashboard"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a></li>
+        <li><a href="javascript:void(0)" onclick="navigateTo('dataPegawai')" class="nav-link" data-page="dataPegawai"><i class="bi bi-people"></i><span>Data Pegawai</span></a></li>
+        <li id="navKelolaPegawai" style="display:none"><a href="javascript:void(0)" onclick="navigateTo('kelolaPegawai')" class="nav-link" data-page="kelolaPegawai"><i class="bi bi-person-gear"></i><span>Kelola Pegawai</span><span class="badge-sa">SA</span></a></li>
+        <li id="navKelolaAdminUnit" style="display:none"><a href="javascript:void(0)" onclick="navigateTo('kelolaAdminUnit')" class="nav-link" data-page="kelolaAdminUnit"><i class="bi bi-diagram-3"></i><span>Admin Unit Kerja</span><span class="badge-sa">SA</span></a></li>
+        <li id="navPengajuanMasuk"><a href="javascript:void(0)" onclick="navigateTo('pengajuanMasuk')" class="nav-link" data-page="pengajuanMasuk"><i class="bi bi-inbox"></i><span>Pengajuan Masuk</span><span class="badge-pending" id="navPendingBadge" style="display:none">0</span></a></li>
+        <li id="navRiwayatSeluruh"><a href="javascript:void(0)" onclick="navigateTo('riwayatSeluruh')" class="nav-link" data-page="riwayatSeluruh"><i class="bi bi-clock-history"></i><span>Riwayat Pengajuan</span></a></li>
+        <li id="navKelolaGaji" style="display:none"><a href="javascript:void(0)" onclick="navigateTo('kelolaGaji')" class="nav-link" data-page="kelolaGaji"><i class="bi bi-cash-coin"></i><span>Data Gaji</span><span class="badge-sa">SA</span></a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="sidebarUserToggle" onclick="toggleSidebarUserMenu()">
+          <div class="sidebar-user-avatar" id="sidebarUserAvatar">--</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">-</div>
+            <div class="sidebar-user-role" id="sidebarUserRole">-</div>
+          </div>
+          <i class="bi bi-chevron-up sidebar-user-caret"></i>
+        </div>
+        <div class="sidebar-user-menu account-dropdown" id="sidebarUserMenu">
+          <a href="javascript:void(0)" onclick="toggleTheme()"><i class="bi bi-moon-stars theme-toggle-icon"></i> <span class="theme-toggle-label">Mode Malam</span></a>
+          <a href="javascript:void(0)" onclick="openChangePasswordModal()"><i class="bi bi-key"></i> Ubah Password</a>
+          <a href="javascript:void(0)" onclick="handleLogout()" class="text-logout"><i class="bi bi-box-arrow-left"></i> Keluar</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Topbar Pegawai -->
+    <nav id="topbarPegawai" class="topbar-pegawai" style="display:none;">
+      <div class="topbar-inner d-none d-lg-flex">
+        <div class="topbar-brand"><i class="bi bi-shield-check"></i> PINTAR-Gaji</div>
+        <div class="topbar-links" id="topbarLinks">
+          <a href="javascript:void(0)" onclick="navigateTo('pegawaiDashboard')" class="topbar-link active" data-page="pegawaiDashboard">Portal</a>
+          <a href="javascript:void(0)" onclick="navigateTo('ajukanPilihJenis')" class="topbar-link" data-page="ajukanPilihJenis">Ajukan Perubahan</a>
+          <a href="javascript:void(0)" onclick="navigateTo('riwayatSaya')" class="topbar-link" data-page="riwayatSaya">Riwayat Pengajuan</a>
+          <a href="javascript:void(0)" onclick="navigateTo('gajiSaya')" class="topbar-link" data-page="gajiSaya">Gaji Saya</a>
+        </div>
+        <div class="topbar-right">
+          <button class="icon-btn" onclick="navigateTo('riwayatSaya')"><i class="bi bi-bell"></i></button>
+          <div class="user-menu-wrap">
+            <div class="avatar-chip" onclick="toggleDesktopUserMenu()" id="desktopAvatarChip" title="Akun Saya"><i class="bi bi-person"></i></div>
+            <div class="account-dropdown user-dropdown" id="desktopUserMenu">
+              <div class="user-dropdown-name" id="desktopUserName">-</div>
+              <a href="javascript:void(0)" onclick="toggleTheme()"><i class="bi bi-moon-stars theme-toggle-icon"></i> <span class="theme-toggle-label">Mode Malam</span></a>
+              <a href="javascript:void(0)" onclick="openChangePasswordModal()"><i class="bi bi-key"></i> Ubah Password</a>
+              <a href="javascript:void(0)" onclick="handleLogout()" class="text-logout"><i class="bi bi-box-arrow-left"></i> Keluar</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Mobile topbar -->
+      <div class="topbar-mobile d-lg-none">
+        <button class="icon-btn" onclick="toggleMobileMenu()"><i class="bi bi-list fs-4"></i></button>
+        <span id="pageTitleMobile">Portal</span>
+        <div class="avatar-chip" style="width:32px;height:32px;font-size:13px;" onclick="toggleMobileMenu()"><i class="bi bi-person"></i></div>
+      </div>
+      <div class="mobile-nav-panel" id="mobileNavPanel">
+        <a href="javascript:void(0)" class="mobile-nav-link" onclick="navigateTo('pegawaiDashboard')"><i class="bi bi-house"></i> Portal</a>
+        <a href="javascript:void(0)" class="mobile-nav-link" onclick="navigateTo('ajukanPilihJenis')"><i class="bi bi-pencil-square"></i> Ajukan Perubahan</a>
+        <a href="javascript:void(0)" class="mobile-nav-link" onclick="navigateTo('riwayatSaya')"><i class="bi bi-clock-history"></i> Riwayat Pengajuan</a>
+        <a href="javascript:void(0)" class="mobile-nav-link" onclick="navigateTo('gajiSaya')"><i class="bi bi-cash-coin"></i> Gaji Saya</a>
+        <div class="mobile-nav-divider"></div>
+        <a href="javascript:void(0)" class="mobile-nav-link" onclick="toggleTheme()"><i class="bi bi-moon-stars theme-toggle-icon"></i> <span class="theme-toggle-label">Mode Malam</span></a>
+        <a href="javascript:void(0)" class="mobile-nav-link" onclick="openChangePasswordModal()"><i class="bi bi-key"></i> Ubah Password</a>
+        <a href="javascript:void(0)" class="mobile-nav-link text-logout" onclick="handleLogout()"><i class="bi bi-box-arrow-left"></i> Keluar</a>
+      </div>
+    </nav>
+
+    <!-- Mobile topbar for Admin -->
+    <div id="topbarAdminMobile" class="topbar d-lg-none" style="display:none;">
+      <button class="btn btn-link" onclick="toggleSidebar()"><i class="bi bi-list fs-4"></i></button>
+      <h6 id="pageTitleAdminMobile" class="mb-0">Dashboard</h6>
+      <div style="width:24px"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="mainContent" class="main-content">
+      <div id="app-container">
+        <!-- Konten halaman disuntikkan di sini oleh JavaScript.html -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Konfirmasi -->
+  <div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="confirmModalTitle">Konfirmasi</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" id="confirmModalBody">Apakah Anda yakin?</div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-danger-fill" id="confirmModalBtn">Ya, Lanjutkan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Preview Dokumen -->
+  <div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Pratinjau Dokumen</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body text-center" id="previewContent"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Tutup</button>
+          <a id="downloadBtn" href="#" class="btn btn-accent" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Unduh / Buka di Tab Baru</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ubah Password -->
+  <div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title"><i class="bi bi-key"></i> Ubah Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <form id="changePasswordForm" onsubmit="submitChangePassword(event)">
+            <div class="mb-3">
+              <label class="form-label">Password Lama <span class="required-asterisk">*</span></label>
+              <input type="password" class="form-control" id="cpOldPassword" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Password Baru <span class="required-asterisk">*</span></label>
+              <input type="password" class="form-control" id="cpNewPassword" minlength="4" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Konfirmasi Password Baru <span class="required-asterisk">*</span></label>
+              <input type="password" class="form-control" id="cpConfirmPassword" minlength="4" required>
+            </div>
+            <button type="submit" class="btn btn-accent w-100" id="cpSubmitBtn">Simpan Password Baru</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Impor Data Gaji dari Excel -->
+  <div class="modal fade" id="importGajiModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title"><i class="bi bi-file-earmark-excel"></i> Impor Data Gaji dari Excel</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <p class="text-muted-pg" style="font-size:13px;">Gunakan file Excel format resmi Daftar Gaji (kolom <b>NIP Pegawai</b>, Nama Pegawai, Gaji Pokok, Jumlah Ditransfer, dst — 45 kolom). Satu file = satu periode gaji untuk seluruh pegawai di dalamnya, jadi Periode wajib dipilih terlebih dahulu di bawah ini.</p>
+          <div class="mb-3">
+            <label class="form-label">Periode Gaji <span class="required-asterisk">*</span></label>
+            <input type="month" class="form-control" id="importGajiPeriode" required>
+          </div>
+          <div class="dropzone" id="dz_importGaji" onclick="document.getElementById('input_importGaji').click()">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <div style="font-weight:700;margin-top:8px;">Klik untuk memilih file Excel (.xlsx)</div>
+            <div id="filename_importGaji" style="font-weight:700;color:var(--success);margin-top:6px;"></div>
+          </div>
+          <input type="file" id="input_importGaji" accept=".xlsx" style="display:none" onchange="handleImportGajiFileSelect(this)">
+          <div id="importGajiResult" class="mt-3"></div>
+          <button type="button" class="btn btn-accent w-100 mt-3" id="importGajiSubmitBtn" onclick="submitImportGaji()" disabled>Mulai Impor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah/Edit Data Gaji Manual -->
+  <div class="modal fade" id="gajiFormModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="gajiFormModalTitle"><i class="bi bi-cash-coin"></i> Data Gaji</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <form id="gajiForm" onsubmit="submitGajiForm(event)">
+            <input type="hidden" id="gajiFormId">
+            <div class="mb-3"><label class="form-label">NIP Pegawai <span class="required-asterisk">*</span></label><input type="text" class="form-control" id="gajiFormNip" required></div>
+            <div class="mb-3"><label class="form-label">Periode (YYYY-MM) <span class="required-asterisk">*</span></label><input type="month" class="form-control" id="gajiFormPeriode" required></div>
+            <div class="row g-2">
+              <div class="col-4"><label class="form-label">Gaji Pokok <span class="required-asterisk">*</span></label><input type="number" class="form-control" id="gajiFormPokok" value="0" required></div>
+              <div class="col-4"><label class="form-label">Tunjangan</label><input type="number" class="form-control" id="gajiFormTunjangan" value="0"></div>
+              <div class="col-4"><label class="form-label">Potongan</label><input type="number" class="form-control" id="gajiFormPotongan" value="0"></div>
+            </div>
+            <div class="mb-3 mt-2"><label class="form-label">Gaji Bersih / Jumlah Ditransfer <span class="required-asterisk">*</span></label><input type="number" class="form-control" id="gajiFormBersih" value="0" required>
+              <div class="text-muted-pg" style="font-size:11.5px;margin-top:4px;">Default: Gaji Pokok + Tunjangan − Potongan (bisa diubah manual jika berbeda).</div>
+            </div>
+            <div class="mb-3 mt-2"><label class="form-label">Keterangan</label><input type="text" class="form-control" id="gajiFormKeterangan"></div>
+            <div class="mb-2">
+              <button type="button" class="btn btn-outline-pg btn-sm-pg" onclick="toggleGajiFormExtra()"><i class="bi bi-list-ul"></i> <span id="gajiFormExtraToggleLabel">Tampilkan Rincian Lengkap (opsional)</span></button>
+            </div>
+            <div id="gajiFormExtra" style="display:none;"></div>
+            <button type="submit" class="btn btn-accent w-100 mt-2" id="gajiFormSubmitBtn">Simpan</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Detail Gaji (read-only, rincian lengkap) -->
+  <div class="modal fade" id="gajiDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title"><i class="bi bi-receipt"></i> Detail Gaji</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" id="gajiDetailModalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Impor Data Pegawai dari Excel -->
+  <div class="modal fade" id="importPegawaiModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title"><i class="bi bi-file-earmark-excel"></i> Impor Data Pegawai dari Excel</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <button type="button" class="btn btn-outline-pg btn-sm-pg w-100 mb-3" onclick="downloadPegawaiTemplate()"><i class="bi bi-download"></i> Download Template Excel</button>
+          <div class="text-muted-pg" style="font-size:12.5px;background:rgba(225,248,250,0.5);border-radius:10px;padding:10px 12px;margin-bottom:12px;">
+            <b>Cara pakai:</b>
+            <ol style="margin:6px 0 0;padding-left:18px;">
+              <li>Unduh template di atas, isi data pegawai (satu baris = satu pegawai).</li>
+              <li>Kolom <b>NIP</b> dan <b>NamaLengkap</b> wajib diisi; kolom lain boleh dikosongkan.</li>
+              <li>Username &amp; password login dibuat otomatis (Username = NIP).</li>
+              <li>NIP yang sudah terdaftar atau ganda di dalam file akan dilewati &amp; dilaporkan.</li>
+              <li>Simpan file, lalu unggah di bawah ini.</li>
+            </ol>
+          </div>
+          <div class="dropzone" id="dz_importPegawai" onclick="document.getElementById('input_importPegawai').click()">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <div style="font-weight:700;margin-top:8px;">Klik untuk memilih file Excel (.xlsx)</div>
+            <div id="filename_importPegawai" style="font-weight:700;color:var(--success);margin-top:6px;"></div>
+          </div>
+          <input type="file" id="input_importPegawai" accept=".xlsx" style="display:none" onchange="handleImportPegawaiFileSelect(this)">
+          <div id="importPegawaiResult" class="mt-3"></div>
+          <button type="button" class="btn btn-accent w-100 mt-3" id="importPegawaiSubmitBtn" onclick="submitImportPegawai()" disabled>Mulai Impor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:2000">
+    <div id="appToast" class="toast" role="alert">
+      <div class="toast-body d-flex align-items-center gap-2" id="toastBody"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <script src="gas-shim.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
